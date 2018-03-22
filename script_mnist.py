@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from NearestNeighbor import *
 from Backpropagation import *
+from threading import Thread
 
 print("Hello World:)\n")
 ds=DataSet()
@@ -35,10 +36,56 @@ def AnalyseData(ARR_im, num):
     print("mean value: ", np.mean(ARR_im))
     return
 
+def fold(train_im, train_lb, valid_im, valid_lb, k):
+
+    nn = NearestNeighborClass()
+    nn.train(train_im, train_lb)  # train the classifier on the training images and labels
+    predicted_labels = nn.predict(valid_im, k)  # predict labels on the test images
+    # and now print the classification accuracy, which is the average number
+    # of examples that are correctly predicted (i.e. label matches)
+    mean_accuracy = np.mean(predicted_labels == valid_lb) )
+    f = open("results.txt", "a")
+    f.write(k, " ", mean_accuracy, "\n")
+    f.close()
+
+def testData(train_im, train_lb, k):
+    train_len = len(Train_labels)
+    valid_len = len(Valid_labels)
+
+    first_train = (train_len/3)
+    second_train = 2*(train_len/3)
+
+    first_valid = valid_len/3
+    second_valid = 2 * (valid_len/3)
+
+    for k in range(1, 15):
+        fold1 = Thread(target = fold, args = (Train_images[:first_train],
+                                              Train_labels[:first_train],
+                                              Valid_images[:first_valid],
+                                              Valid_labels[:first_valid], k, ))
+
+        fold2 = Thread(target = fold, args = (Train_images[first_train: second_train],
+                                              Train_labels[first_train: second_train],
+                                              Valid_images[first_valid: second_valid],
+                                              Valid_labels[first_valid: second_valid], k, ))
+
+        fold3 = Thread(target = fold, args = (Train_images[second_train:],
+                                              Train_labels[second_train:],
+                                              Valid_images[second_valid:],
+                                              Valid_labels[second_valid:], k, ))
+        fold1.start()
+        fold2.start()
+        fold3.start()
+        fold1.join()
+        fold2.join()
+        fold3.join()
+
+
 
 #PlotSample(Train_images[:1000], Train_labels[:1000], 1)
 
 #AnalyseData(Train_images, 1)
+
 
 
 nn=NearestNeighborClass()
