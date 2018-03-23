@@ -6,7 +6,7 @@ Adopted from CS231n
 '''
 
 import numpy as np
-import progressbar
+#import progressbar
 
 class NearestNeighborClass(object):
     def __init__(self):
@@ -21,7 +21,7 @@ class NearestNeighborClass(object):
     def predict(self, X, k):
         """ X is N x D where each row is an example we wish to predict label for """
         num_test = X.shape[0]
-        bar = progressbar.ProgressBar(maxval=num_test, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()]).start()
+        #bar = progressbar.ProgressBar(maxval=num_test, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()]).start()
         # lets make sure that the output type matches the input type
         Ypred = np.zeros(num_test, dtype = self.ytr.dtype)
 
@@ -48,8 +48,8 @@ class NearestNeighborClass(object):
 
             #Ypred[i] = self.ytr[min_index] # predict the label of the nearest example
             Ypred[i] = max_label
-            bar.update(i+1)
-        bar.finish()
+            #bar.update(i+1)
+        #bar.finish()
 
         return Ypred
 

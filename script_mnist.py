@@ -4,10 +4,10 @@ Created on Dec 1, 2016
 @author: eao
 '''
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from NearestNeighbor import *
 from Backpropagation import *
-from threading import Thread
+from threading import Thread, Lock
 
 print("Hello World:)\n")
 ds=DataSet()
@@ -20,6 +20,8 @@ Train_images=Train[0]
 Train_labels=Train[1]
 Valid_images=Valid[0]
 Valid_labels=Valid[1]
+
+mutex = Lock()
 
 def PlotSample(ARR_im, ARR_lb,num):
     #util.exit_with_error("COMPLETE THE FUNCTION ACCORDING TO LABSPEC!!\n")
@@ -36,51 +38,57 @@ def AnalyseData(ARR_im, num):
     print("mean value: ", np.mean(ARR_im))
     return
 
-def fold(train_im, train_lb, valid_im, valid_lb, k):
+def fold(train_im, train_lb, valid_im, valid_lb, k, foldnr):
 
     nn = NearestNeighborClass()
     nn.train(train_im, train_lb)  # train the classifier on the training images and labels
     predicted_labels = nn.predict(valid_im, k)  # predict labels on the test images
     # and now print the classification accuracy, which is the average number
     # of examples that are correctly predicted (i.e. label matches)
-    mean_accuracy = np.mean(predicted_labels == valid_lb) )
+    mean_accuracy = np.mean(predicted_labels == valid_lb)
+    mutex.acquire()
     f = open("results.txt", "a")
-    f.write(k, " ", mean_accuracy, "\n")
+    write_string = str(k) + "\t" + str(foldnr) + "\t" +  str(mean_accuracy) + "\n"
+    f.write(write_string)
     f.close()
+    mutex.release()
+    print("fold written k: ", k)
 
-def testData(train_im, train_lb, k):
-    train_len = len(Train_labels)
-    valid_len = len(Valid_labels)
+def testData(train_im, train_lb):
+    train_len = len(train_lb)
 
     first_train = (train_len/3)
     second_train = 2*(train_len/3)
 
-    first_valid = valid_len/3
-    second_valid = 2 * (valid_len/3)
+    for k in range(1, 16):
 
-    for k in range(1, 15):
-        fold1 = Thread(target = fold, args = (Train_images[:first_train],
-                                              Train_labels[:first_train],
-                                              Valid_images[:first_valid],
-                                              Valid_labels[:first_valid], k, ))
+        fold1 = Thread(target = fold, args = (train_im[first_train:],
+                                              train_lb[first_train:],
+                                              train_im[:first_train],
+                                              train_lb[:first_train], k, 1, ))
 
-        fold2 = Thread(target = fold, args = (Train_images[first_train: second_train],
-                                              Train_labels[first_train: second_train],
-                                              Valid_images[first_valid: second_valid],
-                                              Valid_labels[first_valid: second_valid], k, ))
+        fold2 = Thread(target = fold, args = (np.concatenate((train_im[:first_train], train_im[second_train:])),
+                                              np.concatenate((train_lb[:first_train], train_lb[second_train:])),
+                                              train_im[first_train: second_train],
+                                              train_lb[first_train: second_train], k, 2, ))
 
-        fold3 = Thread(target = fold, args = (Train_images[second_train:],
-                                              Train_labels[second_train:],
-                                              Valid_images[second_valid:],
-                                              Valid_labels[second_valid:], k, ))
+        fold3 = Thread(target = fold, args = (train_im[:second_train],
+                                              train_lb[:second_train],
+                                              train_im[second_train:],
+                                              train_lb[second_train:], k, 3, ))
         fold1.start()
+	print("fold 1 started k: ", k)
         fold2.start()
+	print("fold 2 started k: ", k)
         fold3.start()
-        fold1.join()
-        fold2.join()
-        fold3.join()
+	print("fold 3 started k: ", k)
+        #fold1.join()
+        #fold2.join()
+        #fold3.join()
 
+testData(Train_images, Train_labels)
 
+print("done")
 
 #PlotSample(Train_images[:1000], Train_labels[:1000], 1)
 
@@ -88,14 +96,14 @@ def testData(train_im, train_lb, k):
 
 
 
-nn=NearestNeighborClass()
+#nn=NearestNeighborClass()
 
-nn.train(Train_images, Train_labels) # train the classifier on the training images and labels
-Labels_predict = nn.predict(Valid_images, 3) # predict labels on the test images
+#nn.train(Train_images, Train_labels) # train the classifier on the training images and labels
+#Labels_predict = nn.predict(Valid_images, 3) # predict labels on the test images
 # and now print the classification accuracy, which is the average number
 # of examples that are correctly predicted (i.e. label matches)
 
-print 'accuracy: %f' % ( np.mean(Labels_predict == Valid_labels) )
+#print 'accuracy: %f' % ( np.mean(Labels_predict == Valid_labels) )
 
 
 
