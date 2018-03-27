@@ -60,7 +60,7 @@ def testData(train_im, train_lb):
     first_train = (train_len/3)
     second_train = 2*(train_len/3)
 
-    for k in range(1, 16):
+    for k in range(16, 32):
 
         fold1 = Thread(target = fold, args = (train_im[first_train:],
                                               train_lb[first_train:],
